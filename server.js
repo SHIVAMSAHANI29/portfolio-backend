@@ -32,23 +32,24 @@ connectDB();
 // ---------- Security middleware ----------
 app.use(helmet());
 
-const allowedOrigins = (process.env.CLIENT_ORIGIN || '')
-  .split(',')
-  .map((origin) => origin.trim())
-  .filter(Boolean);
+const allowedOrigins = [
+    "https://shivamsahani29.github.io"
+];
 
-app.use(
-  cors({
-    origin(origin, callback) {
-      // Allow requests with no origin (curl, mobile apps, Postman) and any whitelisted origin
-      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error('Not allowed by CORS'));
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
     },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
-  })
-);
+}));
+
+app.options("*", cors());
 
 // ---------- Body parsing ----------
 app.use(express.json({ limit: '10kb' }));
