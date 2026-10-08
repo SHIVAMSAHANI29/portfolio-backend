@@ -1,6 +1,35 @@
 // controllers/contactController.js
 
 const { validationResult } = require('express-validator');
+// controllers/contactController.js
+const { validationResult } = require('express-validator');
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+exports.submitContactForm = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ message: errors.array()[0].msg });
+  }
+
+  const { name, email, message } = req.body;
+
+  try {
+    const { error } = await resend.emails.send({
+      from: 'Portfolio <onboarding@resend.dev>',
+      to: 'shivamsahani8285@gmail.com',
+      replyTo: email,
+      subject: `New message from ${name}`,
+      text: `Name: ${name}\nEmail: ${email}\n\n${message}`
+    });
+    if (error) throw new Error(error.message);
+
+    res.json({ message: 'Message sent successfully' });
+  } catch (err) {
+    console.error('Contact error:', err);
+    res.status(500).json({ message: 'Failed to send message' });
+  }
+};
 const Message = require('../models/Message');
 const asyncHandler = require('../utils/asyncHandler');
 const { sendContactNotification } = require('../utils/emailService');
